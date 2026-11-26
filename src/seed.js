@@ -1,6 +1,5 @@
-// Rebuilds the database tables, matching the current deere.sqlite schema,
-// then fills them with the rows in data.json.
-// WARNING: drops all existing tables and their data. Run with: npm run seed
+// npm run seed
+//recreate tables and take data.json and parse data into the database
 const fs = require('fs');
 const path = require('path');
 const db = require('./db');
@@ -108,9 +107,6 @@ db.exec(`
 
 console.log('Database tables created.');
 
-// Inserts rows from a JSON file shaped like { "tableName": [ { "column": value, ... }, ... ] }.
-// Tables are inserted in the order they appear in the file, so list parent tables
-// (e.g. product, Dealership) before tables that reference them (e.g. inventory).
 function insertData(filePath) {
   const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
   const quote = (name) => `"${name.replace(/"/g, '""')}"`;
