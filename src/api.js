@@ -18,7 +18,12 @@ const SELECT_EQUIPMENT = `
     i.condition,
     i.hours           AS engineHours,
     i.dealership_id   AS dealershipId,
-    d.name            AS dealershipName
+    d.name            AS dealershipName,
+    CASE
+      WHEN EXISTS (SELECT 1 FROM Sale s WHERE s."inventory id" = i.id) THEN 'sold'
+      WHEN EXISTS (SELECT 1 FROM Lease l WHERE l."inventory id" = i.id) THEN 'leased'
+      ELSE 'available'
+    END               AS status
   FROM inventory i
   JOIN product p ON p.product_id = i.product_id
   LEFT JOIN Dealership d ON d.dealership_id = i.dealership_id
@@ -57,6 +62,16 @@ router.post('/equipments', (req, res) => {
     return res.status(400).json({
       error: 'serialNumber is required, plus either productId or category and price',
     });
+  }
+
+  if (condition != null && !['new', 'used'].includes(condition)) {
+    return res.status(400).json({ error: "condition must be 'new' or 'used'" });
+  }
+  if (engineHours != null && !(Number.isInteger(Number(engineHours)) && Number(engineHours) >= 0)) {
+    return res.status(400).json({ error: 'engineHours must be a whole number of 0 or more' });
+  }
+  if (productId == null && !(Number(price) > 0)) {
+    return res.status(400).json({ error: 'price must be a number greater than 0' });
   }
 
   // serial has no UNIQUE constraint in the schema, so enforce it here
@@ -104,6 +119,38 @@ router.delete('/equipments/:id', (req, res) => {
     }
     throw err;
   }
+});
+
+// Products that equipment can be added under, with their features
+router.get('/products', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT product_id AS id, category, sub_category AS subCategory, price
+    FROM product
+    ORDER BY category, sub_category, price
+  `).all();
+  res.status(200).json(rows.map((p) => ({ ...p, features: getFeatures.all(p.id) })));
+});
+
+// Dealership locations, with how many units each has available
+router.get('/dealerships', (_req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      d.dealership_id AS id,
+      d.name,
+      d.address,
+      d.latitude,
+      d.longitude,
+      d.phone,
+      COUNT(i.id)     AS availableUnits
+    FROM Dealership d
+    LEFT JOIN inventory i
+      ON i.dealership_id = d.dealership_id
+      AND NOT EXISTS (SELECT 1 FROM Sale s WHERE s."inventory id" = i.id)
+      AND NOT EXISTS (SELECT 1 FROM Lease l WHERE l."inventory id" = i.id)
+    GROUP BY d.dealership_id
+    ORDER BY d.name
+  `).all();
+  res.status(200).json(rows);
 });
 
 module.exports = router;
