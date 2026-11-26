@@ -3,11 +3,221 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>4402 Project</title>
+  <title>Heartland Equipment | New and used farm machinery</title>
+  <meta name="description" content="Browse new and used tractors, combines, sprayers and more across Heartland Equipment's Midwest lots.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
   <script src="/index.js" defer></script>
 </head>
 <body>
-  <button id="btn">Call API</button>
-  <p id="out"></p>
+  <a class="skip" href="#inventory">Skip to inventory</a>
+
+  <header class="masthead">
+    <div class="wrap masthead__inner">
+      <a class="wordmark" href="/">
+        <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="1" y="1" width="30" height="30" rx="3" />
+          <path d="M1 11h30M1 21h30M11 1v30M21 1v30" />
+        </svg>
+        <span>Heartland Equipment</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="#inventory">Inventory</a>
+        <a href="#locations">Locations</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero__intro">
+        <h1 id="hero-title"><span id="hero-count">Machines</span> ready to work</h1>
+        <p class="hero__lede" id="hero-lede">New and used equipment on our Midwest lots, with the hours and specs on every unit.</p>
+        <form class="search" id="search-form" role="search">
+          <label for="search-input">Search by machine or serial number</label>
+          <div class="search__row">
+            <input id="search-input" type="search" placeholder="Row crop tractor, TR19-00001…" autocomplete="off">
+            <button type="submit">Search</button>
+          </div>
+        </form>
+      </div>
+
+      <nav class="directory" aria-label="Browse by machine type">
+        <p class="directory__title">On the lot</p>
+        <ul id="directory-list" class="directory__list">
+          <li class="directory__placeholder">Loading machine types</li>
+        </ul>
+      </nav>
+    </section>
+
+    <section id="inventory" class="inventory" aria-labelledby="inventory-title">
+      <div class="wrap">
+        <div class="inventory__head">
+          <h2 id="inventory-title">Inventory</h2>
+          <div class="inventory__actions">
+            <p id="result-count" class="result-count" aria-live="polite"></p>
+            <button id="add-open" class="button button--solid" type="button">Add equipment</button>
+          </div>
+        </div>
+
+        <form class="filters" id="filters" aria-label="Filter inventory">
+          <div class="field field--search">
+            <label for="f-search">Search</label>
+            <input id="f-search" type="search" placeholder="Type, serial or city" autocomplete="off">
+          </div>
+
+          <div class="field">
+            <label for="f-category">Machine type</label>
+            <select id="f-category"><option value="">All types</option></select>
+          </div>
+
+          <fieldset class="field segmented">
+            <legend>Condition</legend>
+            <label><input type="radio" name="condition" value="" checked><span>Any</span></label>
+            <label><input type="radio" name="condition" value="new"><span>New</span></label>
+            <label><input type="radio" name="condition" value="used"><span>Used</span></label>
+          </fieldset>
+
+          <div class="field">
+            <label for="f-location">Location</label>
+            <select id="f-location"><option value="">All locations</option></select>
+          </div>
+
+          <div class="field">
+            <label for="f-sort">Sort by</label>
+            <select id="f-sort">
+              <option value="price-asc">Price, low to high</option>
+              <option value="price-desc">Price, high to low</option>
+              <option value="hours-asc">Fewest hours</option>
+              <option value="newest">Newest listings</option>
+            </select>
+          </div>
+
+          <label class="toggle">
+            <input type="checkbox" id="f-show-sold">
+            <span>Include sold and leased</span>
+          </label>
+        </form>
+
+        <ul id="tag-grid" class="tag-grid" aria-label="Equipment"></ul>
+
+        <div id="grid-status" class="grid-status" hidden></div>
+
+        <div class="more">
+          <button id="show-more" class="button button--ghost" type="button" hidden>Show more machines</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="locations" class="locations" aria-labelledby="locations-title">
+      <div class="wrap locations__inner">
+        <div class="locations__text">
+          <h2 id="locations-title">Locations</h2>
+          <p>Every lot carries service parts and can move a machine from any other location. Select a lot to see what's parked there.</p>
+          <ul id="location-list" class="location-list"></ul>
+        </div>
+        <figure class="survey" aria-label="Map of dealership locations">
+          <svg id="survey-map" viewBox="0 0 600 460" role="img" aria-labelledby="survey-desc">
+            <desc id="survey-desc">Dealership locations plotted by latitude and longitude across the Midwest.</desc>
+          </svg>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <p class="wordmark wordmark--small">Heartland Equipment</p>
+      <p>List prices shown before trade-in, financing or lease terms. Hours are read from the meter at intake.</p>
+    </div>
+  </footer>
+
+  <dialog id="add-dialog" class="unit-dialog" aria-labelledby="add-title">
+    <form method="dialog" class="unit-dialog__close">
+      <button type="submit" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </form>
+    <form id="add-form" class="unit add-form" novalidate>
+      <h2 id="add-title">Add equipment</h2>
+      <p class="add-form__intro">Log a unit that has arrived on one of the lots.</p>
+
+      <fieldset class="add-form__group">
+        <legend>Machine</legend>
+        <div class="segmented">
+          <label><input type="radio" name="productMode" value="existing" checked><span>Existing model</span></label>
+          <label><input type="radio" name="productMode" value="new"><span>New model</span></label>
+        </div>
+
+        <div class="field" data-mode="existing">
+          <label for="a-product">Model</label>
+          <select id="a-product" name="productId"></select>
+        </div>
+
+        <div class="add-form__row" data-mode="new" hidden>
+          <div class="field">
+            <label for="a-category">Machine type</label>
+            <input id="a-category" name="category" list="category-options" placeholder="Tractor">
+            <datalist id="category-options"></datalist>
+          </div>
+          <div class="field">
+            <label for="a-subcategory">Kind <span class="optional">(optional)</span></label>
+            <input id="a-subcategory" name="subCategory" placeholder="Row Crop">
+          </div>
+          <div class="field">
+            <label for="a-price">List price ($)</label>
+            <input id="a-price" name="price" type="number" min="1" step="1" inputmode="numeric" placeholder="185000">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="add-form__group">
+        <legend>This unit</legend>
+        <div class="add-form__row">
+          <div class="field">
+            <label for="a-serial">Serial number</label>
+            <input id="a-serial" name="serialNumber" autocomplete="off" placeholder="TR19-00251">
+          </div>
+          <div class="field">
+            <label for="a-hours">Engine hours</label>
+            <input id="a-hours" name="engineHours" type="number" min="0" step="1" inputmode="numeric" value="0">
+          </div>
+        </div>
+        <div class="add-form__row">
+          <div class="field">
+            <span class="field__label" id="a-condition-label">Condition</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="a-condition-label">
+              <label><input type="radio" name="condition" value="new" checked><span>New</span></label>
+              <label><input type="radio" name="condition" value="used"><span>Used</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="a-location">Lot</label>
+            <select id="a-location" name="dealershipId"></select>
+          </div>
+        </div>
+      </fieldset>
+
+      <p id="add-error" class="form-error" role="alert" hidden></p>
+
+      <div class="unit__actions">
+        <button class="button button--solid" type="submit">Add equipment</button>
+        <button class="button button--ghost" type="button" data-action="cancel">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="unit-dialog" class="unit-dialog" aria-labelledby="unit-title">
+    <form method="dialog" class="unit-dialog__close">
+      <button type="submit" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </form>
+    <div id="unit-body"></div>
+  </dialog>
 </body>
 </html>
